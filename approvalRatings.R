@@ -76,3 +76,28 @@ quin <- function() {
     result <- table[1,2]
     result
 }
+
+ibd <- function() {
+    page <- read_html("http://www.investors.com/politics/ibdtipp-poll-presidential-approval-direction-of-country/")
+    pdf <- html_nodes(page, "p:nth-child(8) a") %>%
+    html_attr("href")
+
+    table1 <- extract_tables(pdf, pages=1:5)
+    table1 <- table1[grep("Table Q9",table1)]
+    table1 <- table1[[1]]
+    pagenum <- table1[table1[,1]=="Table Q9",2]
+    pagenum = as.numeric(sub('Page\ ','',pagenum))
+    
+    #To be honest at this point it's just educated guessing, the list at the 
+    #beginning of the PDF is of variable length between publications, and their 
+    #page count is based on Page 1 being the first page after the initial list, 
+    #not the first page of the PDF file. 
+    #I've seen this list between 3 and 5 pages long, so it's a little overboard 
+    #here, but at least it's reasonably faster than extracting every single table 
+    #in the sometimes >100 page PDF
+    table2 <- extract_tables(pdf, pages = (min(pagenum) + 3):(min(pagenum) + 10))
+    table2 <- table2[grepl("Approve", table2)]
+    table2 <- table2[[1]]
+    result <- table2[which(table2 == "Approve") + 1, 2]
+    result
+}
